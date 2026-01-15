@@ -29,3 +29,6 @@ recordings/
 .env
 *.pem
 *.key
+
+# Personal notes
+NOTES.md
