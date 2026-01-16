@@ -1,0 +1,27 @@
+# CONFIG
+
+# Stream
+STREAM_WIDTH = 640
+STREAM_HEIGHT = 480
+STREAM_FORMAT = "RGB888"
+
+# Photo
+PHOTO_WIDTH = 4608
+PHOTO_HEIGHT = 2592
+
+# Video
+VIDEO_WIDTH = 1920
+VIDEO_HEIGHT = 1080
+VIDEO_FPS = 30
+
+# JPEG kvalita
+JPEG_QUALITY = 80
+
+# SERVER
+
+HOST = "0.0.0.0"
+PORT = 8000
+
+# Routes
+PHOTOS_DIR = "captures/photos"
+VIDEOS_DIR = "captures/videos"
