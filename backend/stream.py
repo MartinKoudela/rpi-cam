@@ -4,6 +4,8 @@ from picamera2 import Picamera2
 import io
 import uvicorn
 import config as cfg
+from fastapi.staticfiles import StaticFiles
+# import camera as keys
 
 cam = Picamera2()
 
@@ -17,7 +19,6 @@ camera_config = cam.create_preview_configuration(
 cam.stop()
 cam.configure(camera_config)
 cam.start()
-
 
 def generate_frames():
     while True:
@@ -40,6 +41,8 @@ async def video_stream():
         generate_frames(),
         media_type='multipart/x-mixed-replace; boundary=frame'
     )
+
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
 
 uvicorn.run(app, host="0.0.0.0", port=8000)
