@@ -57,22 +57,6 @@
 
 <script>
     feather.replace();
-
-    const ws = new WebSocket(`ws://${window.location.host}/ws`);
-    const img = document.getElementById("stream");
-
-    ws.onmessage = function (event) {
-        const blob = new Blob([event.data], {type: "image/jpeg"});
-        img.src = URL.createObjectURL(blob);
-    };
-
-    document.getElementById("btnPhoto").onclick = function () {
-        ws.send(JSON.stringify({action: "take_photo"}));
-    };
-
-    ws.onopen = () => console.log("Pripojeno!");
-    ws.onclose = () => console.log("Odpojeno");
-    ws.onerror = (e) => console.log("Chyba:", e);
 </script>
 
 </body>
