@@ -11,52 +11,230 @@
 
 <header class="bg-zinc-950 border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
-        <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+        <div id="statusDot" class="w-2 h-2 bg-zinc-600 rounded-full"></div>
         <span class="text-white font-mono text-sm tracking-wider">CAM-RASPI</span>
+        <span id="statusText" class="text-zinc-500 font-mono text-xs">OFFLINE</span>
     </div>
     <span class="text-zinc-500 font-mono text-xs">RASPI-VISION</span>
 </header>
 
-<main class="flex-1 flex items-center justify-center p-2">
-    <div class="relative w-full max-w-5xl">
-        <img
-                src="/stream"
-                alt="Camera"
-                id="stream"
-                draggable="false"
-                class="w-full border border-zinc-800 bg-zinc-950"
-        >
-        <div class="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-zinc-600"></div>
-        <div class="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-zinc-600"></div>
-        <div class="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-zinc-600"></div>
-        <div class="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-zinc-600"></div>
-    </div>
-</main>
+<div class="flex-1 flex">
+    <main class="flex-1 flex items-center justify-center p-2">
+        <div class="relative w-full max-w-5xl">
 
-<footer class="bg-zinc-950 border-t border-zinc-800 px-4 py-4">
-    <div class="flex gap-3 justify-center">
-        <button
-                id="btnPhoto"
-                class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2"
-        >
-            <i data-feather="camera" class="w-4 h-4"></i>
+            <div
+                    id="placeholder"
+                    class="w-full aspect-video bg-zinc-950 border border-zinc-800 flex items-center justify-center"
+            >
+                <div class="text-center">
+                    <i data-feather="video-off" class="w-16 h-16 text-zinc-700 mx-auto mb-4"></i>
+                    <p class="text-zinc-500 font-mono text-sm">Camera is off</p>
+                    <p class="text-zinc-600 font-mono text-xs mt-1">Click "Start" to turn on stream</p>
+                </div>
+            </div>
 
-            SNAPSHOT
-        </button>
-        <button
-                id="btnRecord"
-                class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2"
-        >
-            <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="6"/>
-            </svg>
-            RECORD
-        </button>
+            <img
+                    src=""
+                    alt="Camera"
+                    id="stream"
+                    draggable="false"
+                    class="w-full border border-zinc-800 bg-zinc-950 hidden"
+            >
+
+            <div class="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-zinc-600"></div>
+            <div class="absolute top-0 right-0 w-8 h-8 border-r-2 border-t-2 border-zinc-600"></div>
+            <div class="absolute bottom-0 left-0 w-8 h-8 border-l-2 border-b-2 border-zinc-600"></div>
+            <div class="absolute bottom-0 right-0 w-8 h-8 border-r-2 border-b-2 border-zinc-600"></div>
+        </div>
+    </main>
+
+    <div id="controls" class="
+      fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800 px-4 py-4
+      flex flex-wrap gap-3 justify-center
+      lg:static lg:w-64 lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:flex-col lg:justify-start
+  ">
+
+        <div class="flex gap-3 lg:flex-col lg:w-full">
+            <div class="text-sm text-zinc-500 font-mono w-full flex items-center px-5 py-2.5 ">CONTROLS</div>
+
+            <button
+                    id="btnStart"
+                    class="bg-emerald-900 hover:bg-emerald-800 border border-emerald-700 text-white px-5 py-2.5
+  rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2"
+            >
+                <i data-feather="play" class="w-4 h-4"></i>
+                START
+            </button>
+
+            <button
+                    id="btnStop"
+                    disabled
+                    class="bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm
+  cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+                <i data-feather="square" class="w-4 h-4"></i>
+                STOP
+            </button>
+
+        </div>
+
+
+        <div class="flex gap-3 lg:flex-col lg:w-full">
+            <div class="text-sm text-zinc-500 font-mono w-full flex items-center px-5 py-2.5 ">CAPTURE</div>
+
+            <button
+                    id="btnPhoto"
+                    disabled
+                    class="bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm
+  cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+                <i data-feather="camera" class="w-4 h-4"></i>
+                SNAPSHOT
+            </button>
+
+            <button
+                    id="btnRecord"
+                    disabled
+                    class="bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm
+  cursor-not-allowed transition-colors flex items-center gap-2"
+            >
+                <i data-feather="video" class="w-4 h-4"></i>
+                RECORD
+            </button>
+        </div>
     </div>
-</footer>
+</div>
 
 <script>
     feather.replace();
+
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const placeholder = document.getElementById('placeholder');
+    const stream = document.getElementById('stream');
+    const btnStart = document.getElementById('btnStart');
+    const btnStop = document.getElementById('btnStop');
+    const btnPhoto = document.getElementById('btnPhoto');
+
+    let isRunning = false;
+
+    function updateUI(running) {
+        isRunning = running;
+
+        if (running) {
+            // On
+            statusDot.className = 'w-2 h-2 bg-red-500 rounded-full animate-pulse';
+            statusText.textContent = 'LIVE';
+            statusText.className = 'text-red-500 font-mono text-xs';
+
+            // Show stream
+            placeholder.classList.add('hidden');
+            stream.classList.remove('hidden');
+            stream.src = '/stream?' + Date.now();
+
+            // Stop
+            btnStart.disabled = true;
+            btnStart.className = 'bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm cursor-not-allowed transition-colors flex items-center gap-2';
+
+            btnStop.disabled = false;
+            btnStop.className = 'bg-red-900 hover:bg-red-800 border border-red-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2';
+
+            btnPhoto.disabled = false;
+            btnPhoto.className = 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2';
+
+        } else {
+            // Off
+            statusDot.className = 'w-2 h-2 bg-zinc-600 rounded-full';
+            statusText.textContent = 'OFFLINE';
+            statusText.className = 'text-zinc-500 font-mono text-xs';
+
+            // Show placeholder
+            stream.classList.add('hidden');
+            stream.src = '';
+            placeholder.classList.remove('hidden');
+
+            // Start
+            btnStart.disabled = false;
+            btnStart.className = 'bg-emerald-900 hover:bg-emerald-800 border border-emerald-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2';
+
+            btnStop.disabled = true;
+            btnStop.className = 'bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm cursor-not-allowed transition-colors flex items-center gap-2';
+
+            btnPhoto.disabled = true;
+            btnPhoto.className = 'bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm cursor-not-allowed transition-colors flex items-center gap-2';
+        }
+    }
+
+    async function checkStatus() {
+        try {
+            const response = await fetch('/api/status');
+            const data = await response.json();
+            updateUI(data.running);
+        } catch (error) {
+            console.error('Status check failed:', error);
+            updateUI(false);
+        }
+    }
+
+    async function startCamera() {
+        btnStart.disabled = true;
+        btnStart.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> STARTING...';
+
+        try {
+            const response = await fetch('/api/start', {method: 'POST'});
+            const data = await response.json();
+
+            if (data.success) {
+                updateUI(true);
+                location.reload();
+            } else {
+                alert('Camera start unsuccessful ' + (data.error || 'Unknown error'));
+                updateUI(false);
+            }
+        } catch (error) {
+            console.error('Start failed:', error);
+            alert('Error starting camera');
+            updateUI(false);
+        }
+    }
+
+    async function stopCamera() {
+        btnStop.disabled = true;
+        btnStop.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> STOPPING...';
+
+        try {
+            const response = await fetch('/api/stop', {method: 'POST'});
+            const data = await response.json();
+            updateUI(false);
+            location.reload();
+
+        } catch (error) {
+            console.error('Stop failed:', error);
+            updateUI(false);
+        }
+    }
+
+    async function takePhoto() {
+        try {
+            const response = await fetch('/api/photo', {method: 'POST'});
+            const data = await response.blob();
+            const url = URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'photo.jpg';
+            a.click();
+        } catch (error) {
+            alert('Photo failed:' + error);
+        }
+    }
+
+    btnStart.addEventListener('click', startCamera);
+    btnStop.addEventListener('click', stopCamera);
+    btnPhoto.addEventListener('click', takePhoto);
+
+    checkStatus();
+
+    setInterval(checkStatus, 5000);
 </script>
 
 </body>
