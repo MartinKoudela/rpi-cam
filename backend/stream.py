@@ -139,7 +139,7 @@ async def api_stop():
 
 @app.get("/api/status")
 async def api_status():
-    return {"running": camera_running, "fps": current_fps}
+    return {"running": camera_running, "fps": current_fps, "width": cfg.STREAM_WIDTH, "height": cfg.STREAM_HEIGHT}
 
 
 @app.post("/api/photo")

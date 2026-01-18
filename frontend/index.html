@@ -123,6 +123,7 @@
     const nowText = document.getElementById('nowText');
     const infoFrame = document.getElementById('infoFrame');
     const fpsText = document.getElementById('fpsText');
+    const resolutionText = document.getElementById('resolutionText');
 
 
     let isRunning = false;
@@ -142,9 +143,10 @@
             }, 1000);
             nowText.className = 'text-white font-mono text-xs mx-2';
 
-            fpsText.className = 'text-white font-mono text-xs mx-2 float-right'
+            fpsText.className = 'text-white font-mono text-xs mx-2 ml-auto'
+            resolutionText.className = 'text-white font-mono text-xs mx-2'
 
-            infoFrame.className = 'w-full h-7 bg-zinc-900';
+            infoFrame.className = 'w-full h-7 bg-zinc-900 flex items-center';
 
             // Show stream
             placeholder.classList.add('hidden');
@@ -191,6 +193,8 @@
             updateUI(data.running);
             if (data.running) {
                 fpsText.textContent = data.fps + ' FPS';
+                resolutionText.textContent = data.width + 'x' + data.height;
+
             }
         } catch (error) {
             console.error('Status check failed:', error);
