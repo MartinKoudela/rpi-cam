@@ -8,7 +8,6 @@
     <title>RaspiVision</title>
 </head>
 <body class="bg-black min-h-screen flex flex-col">
-
 <header class="bg-zinc-950 border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
         <div id="statusDot" class="w-2 h-2 bg-zinc-600 rounded-full"></div>
@@ -22,6 +21,13 @@
     <main class="flex-1 flex items-center justify-center p-2">
         <div class="relative w-full max-w-5xl">
 
+            <div id="infoFrame">
+                <span id="nowText"></span>
+                <span id="fpsText"></span>
+                <span id="resolutionText"></span>
+            </div>
+
+
             <div
                     id="placeholder"
                     class="w-full aspect-video bg-zinc-950 border border-zinc-800 flex items-center justify-center"
@@ -32,7 +38,6 @@
                     <p class="text-zinc-600 font-mono text-xs mt-1">Click "Start" to turn on stream</p>
                 </div>
             </div>
-
             <img
                     src=""
                     alt="Camera"
@@ -115,6 +120,10 @@
     const btnStart = document.getElementById('btnStart');
     const btnStop = document.getElementById('btnStop');
     const btnPhoto = document.getElementById('btnPhoto');
+    const nowText = document.getElementById('nowText');
+    const infoFrame = document.getElementById('infoFrame');
+    const fpsText = document.getElementById('fpsText');
+
 
     let isRunning = false;
 
@@ -126,6 +135,16 @@
             statusDot.className = 'w-2 h-2 bg-red-500 rounded-full animate-pulse';
             statusText.textContent = 'LIVE';
             statusText.className = 'text-red-500 font-mono text-xs';
+
+            // Information frame
+            setInterval(() => {
+                nowText.textContent = new Date().toLocaleString();
+            }, 1000);
+            nowText.className = 'text-white font-mono text-xs mx-2';
+
+            fpsText.className = 'text-white font-mono text-xs mx-2 float-right'
+
+            infoFrame.className = 'w-full h-7 bg-zinc-900';
 
             // Show stream
             placeholder.classList.add('hidden');
@@ -170,6 +189,9 @@
             const response = await fetch('/api/status');
             const data = await response.json();
             updateUI(data.running);
+            if (data.running) {
+                fpsText.textContent = data.fps + ' FPS';
+            }
         } catch (error) {
             console.error('Status check failed:', error);
             updateUI(false);
@@ -234,7 +256,7 @@
 
     checkStatus();
 
-    setInterval(checkStatus, 5000);
+    setInterval(checkStatus, 1000);
 </script>
 
 </body>

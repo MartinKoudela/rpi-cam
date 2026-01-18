@@ -7,12 +7,16 @@ import config as cfg
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import time
+from datetime import datetime
 import atexit
+import cv2
+import numpy as np
 
 # TODO: record with cv2 fram info
 
 cam = None
 camera_running = False
+current_fps = 0
 
 
 def start_camera():
@@ -83,30 +87,30 @@ atexit.register(stop_camera)
 
 
 def generate_frames():
-    global camera_running
+    global camera_running, current_fps
 
     frame_interval = 1.0 / 30
+    last_time = time.time()
+    encode_param = [cv2.IMWRITE_JPEG_QUALITY, 70]
 
     while camera_running:
-        start = time.time()
-
-        stream = io.BytesIO()
-
         try:
-            cam.capture_file(stream, format='jpeg')
-            frame = stream.getvalue()
+            frame = cam.capture_array()
+            _, jpeg = cv2.imencode('.jpg', frame, encode_param)
+
             yield (
                     b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n'
-
+                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             )
         except Exception as e:
             print(f"Frame capture error: {e}")
             break
-        finally:
-            stream.close()
 
-        elapsed = time.time() - start
+        now = time.time()
+        elapsed = now - last_time
+        current_fps = round(1.0 / elapsed) if elapsed > 0 else 0
+        last_time = now
+
         if elapsed < frame_interval:
             time.sleep(frame_interval - elapsed)
 
@@ -135,7 +139,7 @@ async def api_stop():
 
 @app.get("/api/status")
 async def api_status():
-    return {"running": camera_running}
+    return {"running": camera_running, "fps": current_fps}
 
 
 @app.post("/api/photo")
@@ -148,12 +152,22 @@ async def api_photo():
             main={"size": (cfg.PHOTO_WIDTH, cfg.PHOTO_HEIGHT)}
         )
 
-        photo_stream = io.BytesIO()
+        # AI bug fix <<<
+        buffer = io.BytesIO()
+        cam.switch_mode_and_capture_file(still_config, buffer, format='jpeg')
 
-        cam.switch_mode_and_capture_file(still_config, photo_stream, format='jpeg')
+        buffer.seek(0)
+        frame = cv2.imdecode(np.frombuffer(buffer.read(), np.uint8), cv2.IMREAD_COLOR)
 
-        return Response(content=photo_stream.getvalue(), media_type="image/jpeg")
+        timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+        cv2.putText(frame, timestamp, (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 7)
+        cv2.putText(frame, timestamp, (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
 
+        _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, cfg.JPEG_QUALITY])
+
+        # >>> AI bug fix
+
+        return Response(content=jpeg.tobytes(), media_type="image/jpeg")
     except Exception as e:
         print(f"Photo capture error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
