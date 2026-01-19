@@ -3,7 +3,6 @@ from fastapi.responses import StreamingResponse, JSONResponse, Response
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import FfmpegOutput
-import asyncio
 import io
 import os
 import uvicorn
@@ -19,6 +18,10 @@ import numpy as np
 cam = None
 camera_running = False
 current_fps = 0
+is_recording = False
+recording_encoder = None
+recording_output = None
+recording_path = None
 
 
 def start_camera():
@@ -173,45 +176,51 @@ async def api_photo():
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-@app.post("/api/video")
-async def api_video():
+@app.post("/api/record/start")
+async def api_start_video():
+    global is_recording, recording_encoder, recording_output, recording_path
+
     if not camera_running:
         return JSONResponse({"error": "Camera not running"}, status_code=503)
+    if is_recording:
+        return JSONResponse({"error": "Camera already recording"}, status_code=400)
 
     try:
-        video_path = f"/tmp/video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+        recording_path = f"/tmp/video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
 
-        cam.stop()
+        recording_encoder = H264Encoder(bitrate=10000000)
+        recording_output = FfmpegOutput(recording_path)
 
-        video_config = cam.create_video_configuration(
-            main={"size": (cfg.VIDEO_WIDTH, cfg.VIDEO_HEIGHT)}
-        )
-        cam.configure(video_config)
+        cam.start_recording(recording_encoder, recording_output)
+        is_recording = True
 
-        encoder = H264Encoder(bitrate=10000000)
-        output = FfmpegOutput(video_path)
+        return {"success": True, "recording": True}
+    except Exception as e:
+        print(f"Recording start error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
 
-        cam.start_recording(encoder, output)
-        await asyncio.sleep(10)
+
+@app.post("/api/record/stop")
+async def api_stop_video():
+    global is_recording, recording_encoder, recording_output, recording_path
+
+    if not is_recording:
+        return JSONResponse({"error": "Not recording"}, status_code=400)
+
+    try:
+
         cam.stop_recording()
+        is_recording = False
 
-        stream_config = cam.create_preview_configuration(
-            main={
-                "size": (cfg.STREAM_WIDTH, cfg.STREAM_HEIGHT),
-                "format": cfg.STREAM_FORMAT
-            }
-        )
-        cam.configure(stream_config)
-        cam.start()
-
-        with open(video_path, "rb") as f:
+        with open(recording_path, "rb") as f:
             video_data = f.read()
 
-        os.remove(video_path)
+        os.remove(recording_path)
+        recording_path = None
 
         return Response(content=video_data, media_type="video/mp4")
     except Exception as e:
-        print(f"Video capture error: {e}")
+        print(f"Recording stop error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
