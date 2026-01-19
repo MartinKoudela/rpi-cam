@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 from picamera2 import Picamera2
+from picamera2.encoders import H264Encoder
+from picamera2.outputs import FfmpegOutput
+import asyncio
 import io
+import os
 import uvicorn
 import config as cfg
 from fastapi.staticfiles import StaticFiles
@@ -11,8 +15,6 @@ from datetime import datetime
 import atexit
 import cv2
 import numpy as np
-
-# TODO: record with cv2 fram info
 
 cam = None
 camera_running = False
@@ -91,11 +93,12 @@ def generate_frames():
 
     frame_interval = 1.0 / 30
     last_time = time.time()
-    encode_param = [cv2.IMWRITE_JPEG_QUALITY, 70]
+    encode_param = [cv2.IMWRITE_JPEG_QUALITY, 40]
 
     while camera_running:
         try:
             frame = cam.capture_array()
+            frame = cv2.cvtColor(frame, cv2.COLOR_YUV420p2RGB)
             _, jpeg = cv2.imencode('.jpg', frame, encode_param)
 
             yield (
@@ -110,9 +113,6 @@ def generate_frames():
         elapsed = now - last_time
         current_fps = round(1.0 / elapsed) if elapsed > 0 else 0
         last_time = now
-
-        if elapsed < frame_interval:
-            time.sleep(frame_interval - elapsed)
 
 
 app = FastAPI()
@@ -170,6 +170,48 @@ async def api_photo():
         return Response(content=jpeg.tobytes(), media_type="image/jpeg")
     except Exception as e:
         print(f"Photo capture error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/video")
+async def api_video():
+    if not camera_running:
+        return JSONResponse({"error": "Camera not running"}, status_code=503)
+
+    try:
+        video_path = f"/tmp/video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+
+        cam.stop()
+
+        video_config = cam.create_video_configuration(
+            main={"size": (cfg.VIDEO_WIDTH, cfg.VIDEO_HEIGHT)}
+        )
+        cam.configure(video_config)
+
+        encoder = H264Encoder(bitrate=10000000)
+        output = FfmpegOutput(video_path)
+
+        cam.start_recording(encoder, output)
+        await asyncio.sleep(10)
+        cam.stop_recording()
+
+        stream_config = cam.create_preview_configuration(
+            main={
+                "size": (cfg.STREAM_WIDTH, cfg.STREAM_HEIGHT),
+                "format": cfg.STREAM_FORMAT
+            }
+        )
+        cam.configure(stream_config)
+        cam.start()
+
+        with open(video_path, "rb") as f:
+            video_data = f.read()
+
+        os.remove(video_path)
+
+        return Response(content=video_data, media_type="video/mp4")
+    except Exception as e:
+        print(f"Video capture error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
 

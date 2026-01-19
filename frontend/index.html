@@ -120,6 +120,7 @@
     const btnStart = document.getElementById('btnStart');
     const btnStop = document.getElementById('btnStop');
     const btnPhoto = document.getElementById('btnPhoto');
+    const btnRecord = document.getElementById('btnRecord');
     const nowText = document.getElementById('nowText');
     const infoFrame = document.getElementById('infoFrame');
     const fpsText = document.getElementById('fpsText');
@@ -163,6 +164,9 @@
             btnPhoto.disabled = false;
             btnPhoto.className = 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2';
 
+            btnRecord.disabled = false;
+            btnRecord.className = 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2';
+
         } else {
             // Off
             statusDot.className = 'w-2 h-2 bg-zinc-600 rounded-full';
@@ -183,6 +187,9 @@
 
             btnPhoto.disabled = true;
             btnPhoto.className = 'bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm cursor-not-allowed transition-colors flex items-center gap-2';
+
+            btnRecord.disabled = true;
+            btnRecord.className = 'bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm cursor-not-allowed transition-colors flex items-center gap-2';
         }
     }
 
@@ -254,9 +261,24 @@
         }
     }
 
+    async function recordVideo() {
+        try {
+            const response = await fetch('/api/video', {method: 'POST'});
+            const data = await response.blob();
+            const url = URL.createObjectURL(data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'video.mp4';
+            a.click();
+        } catch (error) {
+            alert('Video failed:' + error);
+        }
+    }
+
     btnStart.addEventListener('click', startCamera);
     btnStop.addEventListener('click', stopCamera);
     btnPhoto.addEventListener('click', takePhoto);
+    btnRecord.addEventListener('click', recordVideo);
 
     checkStatus();
 
