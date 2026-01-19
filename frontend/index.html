@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="css/style.css">
     <title>RaspiVision</title>
 </head>
 <body class="bg-black min-h-screen flex flex-col">
@@ -96,7 +97,6 @@
                 <i data-feather="camera" class="w-4 h-4"></i>
                 SNAPSHOT
             </button>
-
             <button
                     id="btnRecord"
                     disabled
@@ -104,6 +104,7 @@
   cursor-not-allowed transition-colors flex items-center gap-2"
             >
                 <i data-feather="video" class="w-4 h-4"></i>
+                <span id="recDot" class="hidden"></span>
                 RECORD
             </button>
         </div>

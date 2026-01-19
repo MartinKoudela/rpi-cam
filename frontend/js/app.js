@@ -1,6 +1,7 @@
 feather.replace();
 
 const statusDot = document.getElementById('statusDot');
+const recDot = document.getElementById('recDot');
 const statusText = document.getElementById('statusText');
 const placeholder = document.getElementById('placeholder');
 const stream = document.getElementById('stream');
@@ -99,7 +100,7 @@ async function checkStatus() {
 
 async function startCamera() {
     btnStart.disabled = true;
-    btnStart.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> STARTING...';
+    btnStart.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> STARTING<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
 
     try {
         const response = await fetch('/api/start', {method: 'POST'});
@@ -121,7 +122,7 @@ async function startCamera() {
 
 async function stopCamera() {
     btnStop.disabled = true;
-    btnStop.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> STOPPING...';
+    btnStop.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> STOPPING<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
 
     try {
         const response = await fetch('/api/stop', {method: 'POST'});
@@ -141,9 +142,16 @@ async function takePhoto() {
         const data = await response.blob();
         const url = URL.createObjectURL(data);
         const a = document.createElement('a');
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-').replace('T', '_');
+        btnPhoto.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24">' +
+            '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>' +
+            '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>' +
+            '</svg> SAVING<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+
         a.href = url;
-        a.download = 'photo.jpg';
+        a.download = `photo_${timestamp}.jpg`;
         a.click();
+        setTimeout(() => window.location.reload(), 3000);
     } catch (error) {
         alert('Photo failed:' + error);
     }
@@ -154,7 +162,7 @@ async function toggleRecord() {
         btnRecord.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24">' +
             '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>' +
             '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>' +
-            '</svg> STARTING...';
+            '</svg> STARTING <span class="dots blink"><span>.</span><span>.</span><span>.</span></span>';
 
         try {
             const response = await fetch('/api/record/start', {method: 'POST'});
@@ -167,11 +175,10 @@ async function toggleRecord() {
 
             if (data.success) {
                 isRecording = true;
-                btnRecord.innerHTML = '<i data-feather="square" class="w-4 h-4"></i> STOP REC';
-                btnRecord.className = 'bg-red-900 hover:bg-red-800 border border-red-700 text-white px-5 py-2.5 rounded '
-                    +
+                recDot.className = 'w-2 h-2 bg-red-500 rounded-full animate-pulse';
+                btnRecord.innerHTML = '<span class="w-4 h-4 bg-red-500 rounded-full animate-pulse"></span> STOP REC<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
+                btnRecord.className = 'bg-red-900 hover:bg-red-800 border border-red-700 text-white px-5 py-2.5 rounded ' +
                     'font-mono text-sm cursor-pointer transition-colors flex items-center gap-2';
-                feather.replace();
             }
         } catch (error) {
             alert('Record start failed: ' + error);
@@ -182,7 +189,7 @@ async function toggleRecord() {
         btnRecord.innerHTML = '<svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24">' +
             '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>' +
             '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>' +
-            '</svg> SAVING...';
+            '</svg> SAVING<span class="dots"><span>.</span><span>.</span><span>.</span></span>';
 
         try {
             const response = await fetch('/api/record/stop', {method: 'POST'});
@@ -190,8 +197,9 @@ async function toggleRecord() {
 
             const url = URL.createObjectURL(data);
             const a = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-').replace('T', '_');
             a.href = url;
-            a.download = `video_${Date.now()}.mp4`;
+            a.download = `video_${timestamp}.mp4`;
             a.click();
 
             isRecording = false
