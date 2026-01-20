@@ -22,7 +22,7 @@ is_recording = False
 recording_encoder = None
 recording_output = None
 recording_path = None
-
+stream_format = cfg.DEFAULT_FORMAT
 
 def start_camera():
     global cam, camera_running
@@ -37,7 +37,7 @@ def start_camera():
             camera_config = cam.create_preview_configuration(
                 main={
                     "size": (cfg.STREAM_WIDTH, cfg.STREAM_HEIGHT),
-                    "format": cfg.STREAM_FORMAT
+                    "format": stream_format
                 },
             )
 
@@ -94,14 +94,30 @@ atexit.register(stop_camera)
 def generate_frames():
     global camera_running, current_fps
 
-    frame_interval = 1.0 / 30
     last_time = time.time()
     encode_param = [cv2.IMWRITE_JPEG_QUALITY, 40]
 
     while camera_running:
         try:
             frame = cam.capture_array()
-            frame = cv2.cvtColor(frame, cv2.COLOR_YUV420p2RGB)
+
+            if stream_format == "YUV420":
+                frame = cv2.cvtColor(frame, cv2.COLOR_YUV420p2RGB)
+            elif stream_format == "BGR888":
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            elif stream_format in ["RGB888", "XRGB8888"]:
+                pass
+            elif stream_format == "YUYV":
+                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_YUYV)
+            elif stream_format == "UYVY":
+                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_UYVY)
+            elif stream_format == "NV12":
+                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_NV12)
+            elif stream_format == "NV21":
+                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_NV21)
+            elif stream_format == "R8":
+                frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
             _, jpeg = cv2.imencode('.jpg', frame, encode_param)
 
             yield (
@@ -222,6 +238,26 @@ async def api_stop_video():
     except Exception as e:
         print(f"Recording stop error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/format/{format_name}")
+async def api_switch_format(format_name: str):
+    global stream_format
+
+    if format_name not in cfg.STREAM_FORMATS:
+        return JSONResponse({"error": "Stream format not supported"}, status_code=503)
+
+    stream_format = format_name
+
+    if camera_running:
+        stop_camera()
+        start_camera()
+    return {"success": True, "format": stream_format}
+
+
+@app.get("/api/formats")
+async def api_get_formats():
+    return {"formats": cfg.STREAM_FORMATS, "current": stream_format}
 
 
 @app.get("/stream")

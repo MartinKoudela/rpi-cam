@@ -215,6 +215,20 @@ async function toggleRecord() {
     }
 }
 
+async function loadFormats() {
+    const response = await fetch('/api/formats');
+    const data = await response.json();
+    return data;
+}
+
+async function switchFormat(format_name) {
+    const response = await fetch(`/api/format/${format_name}`, {method: 'POST'});
+    const data = await response.json();
+    if (data.success) {
+        console.log('Switched to:', data.format);
+    }
+}
+
 btnStart.addEventListener('click', startCamera);
 btnStop.addEventListener('click', stopCamera);
 btnPhoto.addEventListener('click', takePhoto);
