@@ -23,6 +23,52 @@ recording_encoder = None
 recording_output = None
 recording_path = None
 stream_format = cfg.DEFAULT_FORMAT
+stream_filter = cfg.DEFAULT_FILTER
+
+
+def apply_filter(frame, filter_name):
+    """Apply visual filter to frame."""
+    if filter_name == "none":
+        return frame
+
+    elif filter_name == "grayscale":
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        return cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+
+    elif filter_name == "sepia":
+        kernel = np.array([
+            [0.272, 0.534, 0.131],
+            [0.349, 0.686, 0.168],
+            [0.393, 0.769, 0.189]
+        ])
+        return cv2.transform(frame, kernel).clip(0, 255).astype(np.uint8)
+
+    elif filter_name == "negative":
+        return 255 - frame
+
+    elif filter_name == "edges":
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        edges = cv2.Canny(gray, 50, 150)
+        return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB)
+
+    elif filter_name == "thermal":
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        return cv2.applyColorMap(gray, cv2.COLORMAP_JET)
+
+    elif filter_name == "cartoon":
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        gray = cv2.medianBlur(gray, 5)
+        edges = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 9, 9)
+        color = cv2.bilateralFilter(frame, 9, 300, 300)
+        return cv2.bitwise_and(color, color, mask=edges)
+
+    elif filter_name == "emboss":
+        kernel = np.array([[-2, -1, 0],
+                          [-1, 1, 1],
+                          [0, 1, 2]])
+        return cv2.filter2D(frame, -1, kernel) + 128
+
+    return frame
 
 def start_camera():
     global cam, camera_running
@@ -45,7 +91,6 @@ def start_camera():
             cam.start()
 
             time.sleep(0.5)
-
             camera_running = True
             print("Camera started successfully")
             return True
@@ -109,20 +154,15 @@ def generate_frames():
                 pass
             elif stream_format == "YUYV":
                 frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_YUYV)
-            elif stream_format == "UYVY":
-                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_UYVY)
-            elif stream_format == "NV12":
-                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_NV12)
-            elif stream_format == "NV21":
-                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_NV21)
-            elif stream_format == "R8":
-                frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
+
+            # Apply filter
+            frame = apply_filter(frame, stream_filter)
 
             _, jpeg = cv2.imencode('.jpg', frame, encode_param)
 
             yield (
-                    b'--frame\r\n'
-                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
+                b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             )
         except Exception as e:
             print(f"Frame capture error: {e}")
@@ -158,7 +198,7 @@ async def api_stop():
 
 @app.get("/api/status")
 async def api_status():
-    return {"running": camera_running, "fps": current_fps, "width": cfg.STREAM_WIDTH, "height": cfg.STREAM_HEIGHT}
+    return {"running": camera_running, "fps": current_fps, "width": cfg.STREAM_WIDTH, "height": cfg.STREAM_HEIGHT, "filter": stream_filter}
 
 
 @app.post("/api/photo")
@@ -183,8 +223,6 @@ async def api_photo():
         cv2.putText(frame, timestamp, (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
 
         _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, cfg.JPEG_QUALITY])
-
-        # >>> AI bug fix
 
         return Response(content=jpeg.tobytes(), media_type="image/jpeg")
     except Exception as e:
@@ -258,6 +296,22 @@ async def api_switch_format(format_name: str):
 @app.get("/api/formats")
 async def api_get_formats():
     return {"formats": cfg.STREAM_FORMATS, "current": stream_format}
+
+
+@app.post("/api/filter/{filter_name}")
+async def api_switch_filter(filter_name: str):
+    global stream_filter
+
+    if filter_name not in cfg.STREAM_FILTERS:
+        return JSONResponse({"error": "Filter not supported"}, status_code=400)
+
+    stream_filter = filter_name
+    return {"success": True, "filter": stream_filter}
+
+
+@app.get("/api/filters")
+async def api_get_filters():
+    return {"filters": cfg.STREAM_FILTERS, "current": stream_filter}
 
 
 @app.get("/stream")

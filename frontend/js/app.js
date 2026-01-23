@@ -229,6 +229,21 @@ async function switchFormat(format_name) {
     }
 }
 
+async function loadFilters() {
+    const response = await fetch('/api/filters');
+    const data = await response.json();
+    return data;
+}
+
+async function switchFilter(filter_name) {
+    const response = await fetch(`/api/filter/${filter_name}`, {method: 'POST'});
+    const data = await response.json();
+    if (data.success) {
+        console.log('Switched to:', data.filter);
+    }
+}
+
+
 btnStart.addEventListener('click', startCamera);
 btnStop.addEventListener('click', stopCamera);
 btnPhoto.addEventListener('click', takePhoto);
