@@ -22,53 +22,6 @@ is_recording = False
 recording_encoder = None
 recording_output = None
 recording_path = None
-stream_format = cfg.DEFAULT_FORMAT
-stream_filter = cfg.DEFAULT_FILTER
-
-
-def apply_filter(frame, filter_name):
-    """Apply visual filter to frame."""
-    if filter_name == "none":
-        return frame
-
-    elif filter_name == "grayscale":
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        return cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
-
-    elif filter_name == "sepia":
-        kernel = np.array([
-            [0.272, 0.534, 0.131],
-            [0.349, 0.686, 0.168],
-            [0.393, 0.769, 0.189]
-        ])
-        return cv2.transform(frame, kernel).clip(0, 255).astype(np.uint8)
-
-    elif filter_name == "negative":
-        return 255 - frame
-
-    elif filter_name == "edges":
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        edges = cv2.Canny(gray, 50, 150)
-        return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB)
-
-    elif filter_name == "thermal":
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        return cv2.applyColorMap(gray, cv2.COLORMAP_JET)
-
-    elif filter_name == "cartoon":
-        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-        gray = cv2.medianBlur(gray, 5)
-        edges = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 9, 9)
-        color = cv2.bilateralFilter(frame, 9, 300, 300)
-        return cv2.bitwise_and(color, color, mask=edges)
-
-    elif filter_name == "emboss":
-        kernel = np.array([[-2, -1, 0],
-                          [-1, 1, 1],
-                          [0, 1, 2]])
-        return cv2.filter2D(frame, -1, kernel) + 128
-
-    return frame
 
 def start_camera():
     global cam, camera_running
@@ -83,7 +36,7 @@ def start_camera():
             camera_config = cam.create_preview_configuration(
                 main={
                     "size": (cfg.STREAM_WIDTH, cfg.STREAM_HEIGHT),
-                    "format": stream_format
+                    "format": "RGB888",
                 },
             )
 
@@ -146,18 +99,6 @@ def generate_frames():
         try:
             frame = cam.capture_array()
 
-            if stream_format == "YUV420":
-                frame = cv2.cvtColor(frame, cv2.COLOR_YUV420p2RGB)
-            elif stream_format == "BGR888":
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            elif stream_format in ["RGB888", "XRGB8888"]:
-                pass
-            elif stream_format == "YUYV":
-                frame = cv2.cvtColor(frame, cv2.COLOR_YUV2RGB_YUYV)
-
-            # Apply filter
-            frame = apply_filter(frame, stream_filter)
-
             _, jpeg = cv2.imencode('.jpg', frame, encode_param)
 
             yield (
@@ -173,9 +114,7 @@ def generate_frames():
         current_fps = round(1.0 / elapsed) if elapsed > 0 else 0
         last_time = now
 
-
 app = FastAPI()
-
 
 @app.post("/api/start")
 async def api_start():
@@ -198,7 +137,7 @@ async def api_stop():
 
 @app.get("/api/status")
 async def api_status():
-    return {"running": camera_running, "fps": current_fps, "width": cfg.STREAM_WIDTH, "height": cfg.STREAM_HEIGHT, "filter": stream_filter}
+    return {"running": camera_running, "fps": current_fps, "width": cfg.STREAM_WIDTH, "height": cfg.STREAM_HEIGHT}
 
 
 @app.post("/api/photo")
@@ -211,7 +150,6 @@ async def api_photo():
             main={"size": (cfg.PHOTO_WIDTH, cfg.PHOTO_HEIGHT)}
         )
 
-        # AI bug fix <<<
         buffer = io.BytesIO()
         cam.switch_mode_and_capture_file(still_config, buffer, format='jpeg')
 
@@ -276,43 +214,6 @@ async def api_stop_video():
     except Exception as e:
         print(f"Recording stop error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
-
-
-@app.post("/api/format/{format_name}")
-async def api_switch_format(format_name: str):
-    global stream_format
-
-    if format_name not in cfg.STREAM_FORMATS:
-        return JSONResponse({"error": "Stream format not supported"}, status_code=503)
-
-    stream_format = format_name
-
-    if camera_running:
-        stop_camera()
-        start_camera()
-    return {"success": True, "format": stream_format}
-
-
-@app.get("/api/formats")
-async def api_get_formats():
-    return {"formats": cfg.STREAM_FORMATS, "current": stream_format}
-
-
-@app.post("/api/filter/{filter_name}")
-async def api_switch_filter(filter_name: str):
-    global stream_filter
-
-    if filter_name not in cfg.STREAM_FILTERS:
-        return JSONResponse({"error": "Filter not supported"}, status_code=400)
-
-    stream_filter = filter_name
-    return {"success": True, "filter": stream_filter}
-
-
-@app.get("/api/filters")
-async def api_get_filters():
-    return {"filters": cfg.STREAM_FILTERS, "current": stream_filter}
-
 
 @app.get("/stream")
 async def video_stream():

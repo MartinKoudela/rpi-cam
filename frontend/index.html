@@ -108,46 +108,6 @@
                 RECORD
             </button>
         </div>
-        <label for="formats" class="text-sm text-zinc-500 font-mono w-full flex items-center px-5 pt-2.5">
-            COLOR FORMAT
-        </label>
-        <select
-                id="formats"
-                class="bg-zinc-800 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm
-             cursor-pointer transition-colors w-full focus:outline-none focus:border-zinc-500
-             hover:bg-zinc-700"
-                onchange="switchFormat(this.value)"
-        >
-
-            <optgroup label="Formats">
-                <option value="YUV420">YUV420</option>
-                <option value="BGR888">BGR888</option>
-                <option value="XRGB8888">XRGB8888</option>
-                <option value="RGB888">RGB888</option>
-                <option value="YUYV">YUYV</option>
-            </optgroup>
-        </select>
-
-        <label for="filters" class="text-sm text-zinc-500 font-mono w-full flex items-center px-5 pt-2.5">
-            COLOR FILTERS
-        </label>
-        <select id="filters"
-                class="bg-zinc-800 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm
-             cursor-pointer transition-colors w-full focus:outline-none focus:border-zinc-500
-             hover:bg-zinc-700"
-                onchange="switchFilter(this.value)">
-
-            <optgroup label="Filters">
-                <option value="none">None</option>
-                <option value="grayscale">Grayscale</option>
-                <option value="sepia">sepia</option>
-                <option value="negative">negative</option>
-                <option value="edges">edges</option>
-                <option value="thermal">thermal</option>
-                <option value="cartoon">cartoon</option>
-                <option value="emboss">emboss</option>
-            </optgroup>
-        </select>
     </div>
 </div>
 

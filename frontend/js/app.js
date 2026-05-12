@@ -215,34 +215,6 @@ async function toggleRecord() {
     }
 }
 
-async function loadFormats() {
-    const response = await fetch('/api/formats');
-    const data = await response.json();
-    return data;
-}
-
-async function switchFormat(format_name) {
-    const response = await fetch(`/api/format/${format_name}`, {method: 'POST'});
-    const data = await response.json();
-    if (data.success) {
-        console.log('Switched to:', data.format);
-    }
-}
-
-async function loadFilters() {
-    const response = await fetch('/api/filters');
-    const data = await response.json();
-    return data;
-}
-
-async function switchFilter(filter_name) {
-    const response = await fetch(`/api/filter/${filter_name}`, {method: 'POST'});
-    const data = await response.json();
-    if (data.success) {
-        console.log('Switched to:', data.filter);
-    }
-}
-
 
 btnStart.addEventListener('click', startCamera);
 btnStop.addEventListener('click', stopCamera);

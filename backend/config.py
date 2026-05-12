@@ -3,12 +3,6 @@
 # Stream
 STREAM_WIDTH = 640
 STREAM_HEIGHT = 420
-STREAM_FORMATS = ["YUV420", "BGR888", "XRGB8888", "RGB888"]
-
-# Filters
-STREAM_FILTERS = ["none", "grayscale", "sepia", "negative", "edges", "thermal", "cartoon", "emboss"]
-DEFAULT_FILTER = "none"
-DEFAULT_FORMAT = "YUV420"
 
 # Photo
 PHOTO_WIDTH = 4608
