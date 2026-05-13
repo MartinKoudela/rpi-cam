@@ -14,6 +14,8 @@ from datetime import datetime
 import atexit
 import cv2
 import numpy as np
+import asyncio
+from contextlib import asynccontextmanager
 
 cam = None
 camera_running = False
@@ -58,7 +60,6 @@ def start_camera():
                     pass
                 cam = None
 
-            time.sleep(1)
 
     print("Failed to start camera after 3 attempts")
     return False
@@ -102,8 +103,8 @@ def generate_frames():
             _, jpeg = cv2.imencode('.jpg', frame, encode_param)
 
             yield (
-                b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
+                    b'--frame\r\n'
+                    b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
             )
         except Exception as e:
             print(f"Frame capture error: {e}")
@@ -114,11 +115,13 @@ def generate_frames():
         current_fps = round(1.0 / elapsed) if elapsed > 0 else 0
         last_time = now
 
+
 app = FastAPI()
+
 
 @app.post("/api/start")
 async def api_start():
-    success = start_camera()
+    success = await asyncio.to_thread(start_camera)
 
     if success:
         return {"success": True, "running": True}
@@ -131,7 +134,7 @@ async def api_start():
 
 @app.post("/api/stop")
 async def api_stop():
-    stop_camera()
+    await asyncio.to_thread(stop_camera)
     return {"success": True, "running": False}
 
 
@@ -215,6 +218,7 @@ async def api_stop_video():
         print(f"Recording stop error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
 @app.get("/stream")
 async def video_stream():
     if not camera_running:
@@ -229,10 +233,12 @@ async def video_stream():
     )
 
 
-@app.on_event("shutdown")
-async def shutdown():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
     stop_camera()
 
+app = FastAPI(lifespan=lifespan)
 
 frontend_path = Path(__file__).parent.parent / "frontend"
 app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")

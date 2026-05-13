@@ -18,6 +18,10 @@ let isRecording = false;
 
 let isRunning = false;
 
+setInterval(() => {
+    nowText.textContent = new Date().toLocaleString();
+}, 1000);
+
 function updateUI(running) {
     isRunning = running;
 
@@ -28,9 +32,6 @@ function updateUI(running) {
         statusText.className = 'text-red-500 font-mono text-xs';
 
         // Information frame
-        setInterval(() => {
-            nowText.textContent = new Date().toLocaleString();
-        }, 1000);
         nowText.className = 'text-white font-mono text-xs mx-2';
 
         fpsText.className = 'text-white font-mono text-xs mx-2 ml-auto'
