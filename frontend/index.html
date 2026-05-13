@@ -29,22 +29,12 @@
             </div>
 
 
-            <div
-                    id="placeholder"
-                    class="w-full aspect-video bg-zinc-950 border border-zinc-800 flex items-center justify-center"
-            >
-                <div class="text-center">
-                    <i data-feather="video-off" class="w-16 h-16 text-zinc-700 mx-auto mb-4"></i>
-                    <p class="text-zinc-500 font-mono text-sm">Camera is off</p>
-                    <p class="text-zinc-600 font-mono text-xs mt-1">Click "Start" to turn on stream</p>
-                </div>
-            </div>
             <img
-                    src=""
+                    src="/stream"
                     alt="Camera"
                     id="stream"
                     draggable="false"
-                    class="w-full border border-zinc-800 bg-zinc-950 hidden "
+                    class="w-full border border-zinc-800 bg-zinc-950"
             >
 
             <div class="absolute top-0 left-0 w-8 h-8 border-l-2 border-t-2 border-zinc-600"></div>
@@ -59,32 +49,6 @@
       flex flex-wrap gap-3 justify-center
       lg:static lg:w-64 lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:flex-col lg:justify-start
   ">
-
-        <div class="flex gap-3 lg:flex-col lg:w-full">
-            <div class="text-sm text-zinc-500 font-mono w-full flex items-center px-5 py-2.5 ">CONTROLS</div>
-
-            <button
-                    id="btnStart"
-                    class="bg-emerald-900 hover:bg-emerald-800 border border-emerald-700 text-white px-5 py-2.5
-  rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2"
-            >
-                <i data-feather="play" class="w-4 h-4"></i>
-                START
-            </button>
-
-            <button
-                    id="btnStop"
-                    disabled
-                    class="bg-zinc-800 border border-zinc-700 text-zinc-500 px-5 py-2.5 rounded font-mono text-sm
-  cursor-not-allowed transition-colors flex items-center gap-2"
-            >
-                <i data-feather="square" class="w-4 h-4"></i>
-                STOP
-            </button>
-
-        </div>
-
-
         <div class="flex gap-3 lg:flex-col lg:w-full">
             <div class="text-sm text-zinc-500 font-mono w-full flex items-center px-5 py-2.5 ">CAPTURE</div>
 
@@ -104,8 +68,7 @@
   cursor-not-allowed transition-colors flex items-center gap-2"
             >
                 <i data-feather="video" class="w-4 h-4"></i>
-                <span id="recDot" class="hidden"></span>
-                RECORD
+RECORD
             </button>
         </div>
     </div>

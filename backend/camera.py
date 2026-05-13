@@ -25,7 +25,7 @@ def start_camera():
             camera_config = cam.create_preview_configuration(
                 main={
                     "size": (cfg.STREAM_WIDTH, cfg.STREAM_HEIGHT),
-                    "format": "RGB888",
+                    "format": "BGR888",
                 },
             )
             cam.configure(camera_config)

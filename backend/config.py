@@ -1,4 +1,5 @@
 # CONFIG
+PIR_PIN = 17
 
 # Stream
 STREAM_WIDTH = 640
