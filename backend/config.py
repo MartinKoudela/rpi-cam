@@ -23,5 +23,5 @@ HOST = "0.0.0.0"
 PORT = 8000
 
 # Routes
-PHOTOS_DIR = "captures/photos"
-VIDEOS_DIR = "captures/videos"
+PHOTOS_DIR = "/home/martin/rpi-cam/captures/photos"
+VIDEOS_DIR = "/home/martin/rpi-cam/captures/videos"
