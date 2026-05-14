@@ -2,6 +2,7 @@ from gpiozero import MotionSensor
 import threading
 import recorder
 import camera
+import config as cfg
 
 pir = None
 _debounce_timer = None
@@ -18,7 +19,7 @@ def _on_motion():
 
 def _on_no_motion():
     global _debounce_timer
-    _debounce_timer = threading.Timer(10, recorder.stop_recording)
+    _debounce_timer = threading.Timer(cfg.PIR_DEBOUNCE, recorder.stop_recording)
     _debounce_timer.start()
 
 

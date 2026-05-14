@@ -13,9 +13,9 @@ import gpio_handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     camera.start_camera()
-    gpio_handler.start_pir()
+    # gpio_handler.start_pir()
     yield
-    gpio_handler.stop_pir()
+    # gpio_handler.stop_pir()
     camera.stop_camera()
 
 app = FastAPI(lifespan=lifespan)

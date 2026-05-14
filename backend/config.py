@@ -1,5 +1,6 @@
 # CONFIG
 PIR_PIN = 17
+PIR_DEBOUNCE = 0 # debounce is in hardware settings
 
 # Stream
 STREAM_WIDTH = 640
