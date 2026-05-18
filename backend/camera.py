@@ -107,7 +107,7 @@ def take_photo():
 
     frame = cv2.imdecode(np.frombuffer(buffer.read(), np.uint8), cv2.IMREAD_COLOR)
 
-    timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+    timestamp = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     cv2.putText(frame, timestamp, (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 7)
     cv2.putText(frame, timestamp, (60, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
 

@@ -1,3 +1,4 @@
+from fastapi.responses import FileResponse
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -13,10 +14,11 @@ import gpio_handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     camera.start_camera()
-    # gpio_handler.start_pir()
+    gpio_handler.start_pir()
     yield
-    # gpio_handler.stop_pir()
+    gpio_handler.stop_pir()
     camera.stop_camera()
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -30,6 +32,7 @@ async def api_start():
         {"success": False, "running": False, "error": "Failed to start camera"},
         status_code=500
     )
+
 
 @app.post("/api/stop")
 async def api_stop():
@@ -87,6 +90,39 @@ async def api_stop_video():
         print(f"Recording stop error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
+@app.get("/api/videos")
+async def list_videos():
+    videos_dir = Path(cfg.VIDEOS_DIR)
+    if not videos_dir.exists():
+        return []
+    videos = []
+    for f in sorted(videos_dir.glob("*.mp4"), reverse=True):
+        videos.append({
+            "name": f.name,
+            "size": f.stat().st_size,
+            "timestamp": f.stat().st_mtime,
+        })
+    return videos
+
+
+@app.get("/api/videos/{filename}")
+async def get_video(filename: str):
+    videos_dir = Path(cfg.VIDEOS_DIR)
+    video_path = (videos_dir / filename).resolve()
+    if video_path.parent != videos_dir.resolve() or not video_path.exists():
+        return JSONResponse({"error": "Video not found"}, status_code=404)
+    return FileResponse(video_path, media_type="video/mp4")
+
+
+@app.delete("/api/videos/{filename}")
+async def delete_video(filename: str):
+    videos_dir = Path(cfg.VIDEOS_DIR)
+    video_path = (videos_dir / filename).resolve()
+    if video_path.parent != videos_dir.resolve() or not video_path.exists():
+        return JSONResponse({"error": "Video not found"}, status_code=404)
+    video_path.unlink()
+    return {"success": True}
 
 @app.get("/stream")
 async def video_stream():

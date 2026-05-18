@@ -18,7 +18,7 @@ def start_recording():
     videos_dir = Path(cfg.VIDEOS_DIR)
     videos_dir.mkdir(parents=True, exist_ok=True)
 
-    _recording_path = str(videos_dir / f"video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4")
+    _recording_path = str(videos_dir / f"video_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.mp4")
 
     encoder = H264Encoder(bitrate=10000000)
     output = FfmpegOutput(_recording_path)

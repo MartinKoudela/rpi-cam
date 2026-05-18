@@ -10,10 +10,16 @@
 </head>
 <body class="bg-black min-h-screen flex flex-col">
 <header class="bg-zinc-950 border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-        <div id="statusDot" class="w-2 h-2 bg-zinc-600 rounded-full"></div>
-        <span class="text-white font-mono text-sm tracking-wider">CAM-RASPI</span>
-        <span id="statusText" class="text-zinc-500 font-mono text-xs">OFFLINE</span>
+    <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div id="statusDot" class="w-2 h-2 bg-zinc-600 rounded-full"></div>
+            <span class="text-white font-mono text-sm tracking-wider">CAM-RASPI</span>
+            <span id="statusText" class="text-zinc-500 font-mono text-xs">OFFLINE</span>
+        </div>
+        <nav class="flex items-center gap-1">
+            <a href="/" class="text-white font-mono text-xs px-3 py-1 rounded bg-zinc-800 border border-zinc-700">LIVE</a>
+            <a href="/gallery.html" class="text-zinc-500 hover:text-zinc-300 font-mono text-xs px-3 py-1 rounded transition-colors">GALLERY</a>
+        </nav>
     </div>
     <span class="text-zinc-500 font-mono text-xs">RASPI-VISION</span>
 </header>
