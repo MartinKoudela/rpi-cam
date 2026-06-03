@@ -8,8 +8,24 @@ const nowText = document.getElementById('nowText');
 const infoFrame = document.getElementById('infoFrame');
 const fpsText = document.getElementById('fpsText');
 const resolutionText = document.getElementById('resolutionText');
+const streamImg = document.getElementById('stream');
 
 let isRecording = false;
+let framePolling = null;
+
+function startFramePolling() {
+    if (framePolling) return;
+    framePolling = setInterval(() => {
+        streamImg.src = '/api/frame?t=' + Date.now();
+    }, 50);
+}
+
+function stopFramePolling() {
+    if (!framePolling) return;
+    clearInterval(framePolling);
+    framePolling = null;
+    streamImg.removeAttribute('src');
+}
 
 setInterval(() => {
     nowText.textContent = new Date().toLocaleString();
@@ -26,6 +42,7 @@ async function checkStatus() {
         const data = await response.json();
 
         if (data.running) {
+            startFramePolling();
             statusDot.className = 'w-2 h-2 bg-red-500 rounded-full animate-pulse';
             statusText.textContent = 'LIVE';
             statusText.className = 'text-red-500 font-mono text-xs';
@@ -38,6 +55,7 @@ async function checkStatus() {
                 btnRecord.className = 'bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-5 py-2.5 rounded font-mono text-sm cursor-pointer transition-colors flex items-center gap-2';
             }
         } else {
+            stopFramePolling();
             statusDot.className = 'w-2 h-2 bg-zinc-600 rounded-full';
             statusText.textContent = 'OFFLINE';
             statusText.className = 'text-zinc-500 font-mono text-xs';

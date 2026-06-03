@@ -1,6 +1,6 @@
 from picamera2 import Picamera2
-from pathlib import Path
 from datetime import datetime
+import asyncio
 import time
 import io
 import cv2
@@ -11,6 +11,7 @@ import config as cfg
 cam = None
 camera_running = False
 current_fps = 0
+_last_frame_time = 0.0
 
 
 def start_camera():
@@ -23,10 +24,7 @@ def start_camera():
         try:
             cam = Picamera2()
             camera_config = cam.create_preview_configuration(
-                main={
-                    "size": (cfg.STREAM_WIDTH, cfg.STREAM_HEIGHT),
-                    "format": "BGR888",
-                },
+                main={"size": (cfg.STREAM_WIDTH, cfg.STREAM_HEIGHT), "format": "BGR888"},
             )
             cam.configure(camera_config)
             cam.start()
@@ -72,28 +70,35 @@ def stop_camera():
 atexit.register(stop_camera)
 
 
-def generate_frames():
-    global current_fps
+def capture_frame():
+    global current_fps, _last_frame_time
 
-    last_time = time.time()
-    encode_param = [cv2.IMWRITE_JPEG_QUALITY, 40]
+    now = time.time()
+    if _last_frame_time > 0:
+        current_fps = round(1.0 / (now - _last_frame_time)) if now > _last_frame_time else 0
+    _last_frame_time = now
+
+    frame = cam.capture_array()
+    _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
+    return jpeg.tobytes()
+
+
+async def generate_frames():
+    frame_interval = 1.0 / 20
 
     while camera_running:
+        t = time.time()
         try:
-            frame = cam.capture_array()
-            _, jpeg = cv2.imencode('.jpg', frame, encode_param)
-            yield (
-                b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
-            )
+            frame = await asyncio.to_thread(cam.capture_array)
+            _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
+            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
         except Exception as e:
             print(f"Frame capture error: {e}")
             break
 
-        now = time.time()
-        elapsed = now - last_time
-        current_fps = round(1.0 / elapsed) if elapsed > 0 else 0
-        last_time = now
+        sleep = frame_interval - (time.time() - t)
+        if sleep > 0:
+            await asyncio.sleep(sleep)
 
 
 def take_photo():

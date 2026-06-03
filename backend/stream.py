@@ -124,6 +124,18 @@ async def delete_video(filename: str):
     video_path.unlink()
     return {"success": True}
 
+@app.get("/api/frame")
+async def get_frame():
+    if not camera.camera_running:
+        return JSONResponse({"error": "Camera not running"}, status_code=503)
+    try:
+        jpeg = await asyncio.to_thread(camera.capture_frame)
+        return Response(content=jpeg, media_type="image/jpeg",
+                        headers={"Cache-Control": "no-store"})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.get("/stream")
 async def video_stream():
     if not camera.camera_running:
