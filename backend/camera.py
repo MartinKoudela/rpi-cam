@@ -78,7 +78,7 @@ def capture_frame():
         current_fps = round(1.0 / (now - _last_frame_time)) if now > _last_frame_time else 0
     _last_frame_time = now
 
-    frame = cam.capture_array()
+    frame = cv2.cvtColor(cam.capture_array(), cv2.COLOR_RGB2BGR)
     _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
     return jpeg.tobytes()
 
@@ -89,7 +89,7 @@ async def generate_frames():
     while camera_running:
         t = time.time()
         try:
-            frame = await asyncio.to_thread(cam.capture_array)
+            frame = cv2.cvtColor(await asyncio.to_thread(cam.capture_array), cv2.COLOR_RGB2BGR)
             _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
         except Exception as e:
