@@ -14,11 +14,9 @@ import gpio_handler
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     camera.start_camera()
-    recorder.start_buffer()
     gpio_handler.start_pir()
     yield
     gpio_handler.stop_pir()
-    recorder.stop_buffer()
     camera.stop_camera()
 
 
@@ -58,12 +56,7 @@ async def api_photo():
     if not camera.camera_running:
         return JSONResponse({"error": "Camera not running"}, status_code=503)
     try:
-        was_recording = recorder.is_recording
-        await asyncio.to_thread(recorder.stop_buffer)
         jpeg = await asyncio.to_thread(camera.take_photo)
-        await asyncio.to_thread(recorder.start_buffer)
-        if was_recording:
-            await asyncio.to_thread(recorder.start_recording)
         return Response(content=jpeg, media_type="image/jpeg")
     except Exception as e:
         print(f"Photo capture error: {e}")
@@ -130,6 +123,7 @@ async def delete_video(filename: str):
         return JSONResponse({"error": "Video not found"}, status_code=404)
     video_path.unlink()
     return {"success": True}
+
 
 @app.get("/api/frame")
 async def get_frame():
