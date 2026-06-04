@@ -1,6 +1,6 @@
 from fastapi.responses import FileResponse
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -21,23 +21,6 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-
-
-@app.post("/api/start")
-async def api_start():
-    success = await asyncio.to_thread(camera.start_camera)
-    if success:
-        return {"success": True, "running": True}
-    return JSONResponse(
-        {"success": False, "running": False, "error": "Failed to start camera"},
-        status_code=500
-    )
-
-
-@app.post("/api/stop")
-async def api_stop():
-    await asyncio.to_thread(camera.stop_camera)
-    return {"success": True, "running": False}
 
 
 @app.get("/api/status")
@@ -135,16 +118,6 @@ async def get_frame():
                         headers={"Cache-Control": "no-store"})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
-
-
-@app.get("/stream")
-async def video_stream():
-    if not camera.camera_running:
-        return JSONResponse({"error": "Camera is not running."}, status_code=503)
-    return StreamingResponse(
-        camera.generate_frames(),
-        media_type='multipart/x-mixed-replace; boundary=frame'
-    )
 
 
 frontend_path = Path(__file__).parent.parent / "frontend"

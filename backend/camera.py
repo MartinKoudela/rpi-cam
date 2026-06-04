@@ -1,6 +1,5 @@
 from picamera2 import Picamera2
 from datetime import datetime
-import asyncio
 import time
 import io
 import cv2
@@ -81,24 +80,6 @@ def capture_frame():
     frame = cv2.cvtColor(cam.capture_array(), cv2.COLOR_RGB2BGR)
     _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
     return jpeg.tobytes()
-
-
-async def generate_frames():
-    frame_interval = 1.0 / 20
-
-    while camera_running:
-        t = time.time()
-        try:
-            frame = cv2.cvtColor(await asyncio.to_thread(cam.capture_array), cv2.COLOR_RGB2BGR)
-            _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 40])
-            yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n'
-        except Exception as e:
-            print(f"Frame capture error: {e}")
-            break
-
-        sleep = frame_interval - (time.time() - t)
-        if sleep > 0:
-            await asyncio.sleep(sleep)
 
 
 def take_photo():
